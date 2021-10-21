@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  adminserver:
+    build: ./adminserver/
+    image: ansible_adminserver
+    container_name: admin01-composed
+    hostname: admin01-composed
+    command: ["/usr/sbin/sshd","-D"]
+    volumes:
+      - ansible_vol:/var/ansible
+  managed-host-alpine:
+    build: 
+      context: ./managed_hosts/alpine/
+      target: alpine-sshd
+    restart: unless-stopped
+    ports:
+      - "3000"
+#      - 2222:22
+    environment:
+      - SSH_ENABLE_ROOT=true
+      # - SSH_USERS="admin:1000:1000"
+    depends_on:
+      - adminserver
+    deploy:
+      replicas: 1
+    volumes_from:
+      - adminserver:rw
+volumes:
+  ansible_vol:
